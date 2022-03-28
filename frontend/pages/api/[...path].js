@@ -1,7 +1,7 @@
 import Cookies from "cookies";
 import { proxy } from "../../server/proxy";
 
-function handler(req, res) {
+export default (req, res) => {
   req.url = req.url.replace(/^\/api/, "");
 
   return new Promise((resolve, reject) => {
@@ -18,12 +18,10 @@ function handler(req, res) {
 
     proxy.web(req, res);
   });
-}
+};
 
 export const config = {
   api: {
     bodyParser: false,
   },
 };
-
-export default handler;
