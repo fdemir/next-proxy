@@ -2,9 +2,9 @@ import Cookies from "cookies";
 import { proxy } from "../../server/proxy";
 
 function handler(req, res) {
-  return new Promise((resolve, reject) => {
-    req.url = req.url.replace(/^\/api/, "");
+  req.url = req.url.replace(/^\/api/, "");
 
+  return new Promise((resolve, reject) => {
     proxy.once("error", reject);
 
     const cookies = new Cookies(req, res);
@@ -16,9 +16,7 @@ function handler(req, res) {
       req.headers.authorization = authorization;
     }
 
-    proxy.web(req, res, {
-      target: process.env.SERVICE_URL,
-    });
+    proxy.web(req, res);
   });
 }
 

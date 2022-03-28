@@ -1,7 +1,7 @@
 import { proxy } from "../../server/proxy";
 import Cookies from "cookies";
 
-export default function handler(req, res) {
+export default (req, res) => {
   req.url = req.url.replace(/^\/api/, "");
 
   return new Promise((resolve, reject) => {
@@ -9,42 +9,37 @@ export default function handler(req, res) {
 
     proxy.once("proxyRes", (proxyRes, req, res) => {
       let body = [];
-      proxyRes.on("data", (chunk) => {
-        body.push(chunk);
-      });
+
+      proxyRes.on("data", (chunk) => body.push(chunk));
 
       proxyRes.once("error", reject);
 
       proxyRes.on("end", () => {
-        res.statusCode = proxyRes.statusCode;
-        body = JSON.parse(Buffer.concat(body).toString());
+        try {
+          body = JSON.parse(Buffer.concat(body).toString());
 
-        if (res.statusCode !== 200) {
-          res.json(body);
-          reject();
+          if (proxyRes.statusCode !== 200) throw new Error(body);
+
+          const cookies = new Cookies(req, res);
+          cookies.set("authorization", body.accessToken, {
+            httpOnly: true,
+            sameSite: "lax",
+          });
+
+          res.status(200).end();
+        } catch (error) {
+          res.status(proxyRes.statusCode).json(body);
         }
 
-        const { accessToken } = body;
-
-        const cookies = new Cookies(req, res);
-        cookies.set("authorization", accessToken, {
-          httpOnly: true,
-          sameSite: "lax",
-        });
-
-        res.json({
-          message: "Login successful.",
-        });
         resolve();
       });
     });
 
     proxy.web(req, res, {
-      target: process.env.SERVICE_URL,
       selfHandleResponse: true,
     });
   });
-}
+};
 
 export const config = {
   api: {
