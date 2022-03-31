@@ -2,10 +2,8 @@ import Cookies from "cookies";
 import { proxy } from "../../server/proxy";
 
 export default (req, res) => {
-  req.url = req.url.replace(/^\/api/, "");
-
   return new Promise((resolve, reject) => {
-    proxy.once("error", reject);
+    req.url = req.url.replace(/^\/api/, "");
 
     const cookies = new Cookies(req, res);
     const authorization = cookies.get("authorization");
@@ -16,6 +14,7 @@ export default (req, res) => {
       req.headers.authorization = authorization;
     }
 
+    proxy.once("error", reject);
     proxy.web(req, res);
   });
 };

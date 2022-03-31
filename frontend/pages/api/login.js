@@ -1,10 +1,18 @@
-import { proxy } from "../../server/proxy";
 import Cookies from "cookies";
+import { proxy } from "../../server/proxy";
+
+const LOGIN_ENDPOINT_PATH = "/login";
 
 export default (req, res) => {
-  req.url = req.url.replace(/^\/api/, "");
-
   return new Promise((resolve, reject) => {
+    // we're changing the url to our login endpoint without the /api prefix
+    req.url = LOGIN_ENDPOINT_PATH;
+
+    /**
+     * if an error occurs in the proxy, we will reject the promise.
+     * it is so important. if you don't reject the promise,
+     *  you're facing the stalled requests issue.
+     */
     proxy.once("error", reject);
 
     proxy.once("proxyRes", (proxyRes, req, res) => {
@@ -12,13 +20,15 @@ export default (req, res) => {
 
       proxyRes.on("data", (chunk) => body.push(chunk));
 
+      // don't forget the catch the errors
       proxyRes.once("error", reject);
 
       proxyRes.on("end", () => {
         try {
           body = JSON.parse(Buffer.concat(body).toString());
 
-          if (proxyRes.statusCode !== 200) throw new Error(body);
+          const isSuccess = proxyRes.statusCode === 200;
+          if (!isSuccess) throw new Error();
 
           const cookies = new Cookies(req, res);
           cookies.set("authorization", body.accessToken, {
@@ -31,6 +41,9 @@ export default (req, res) => {
           res.status(proxyRes.statusCode).json(body);
         }
 
+        /**
+         * we are resolving the promise here for next.js to notify we've handled it.
+         */
         resolve();
       });
     });
@@ -41,6 +54,10 @@ export default (req, res) => {
   });
 };
 
+/**
+ * In next.js's api routes, bodyParser is automatically enabled.
+ * Since we are using the proxy, we need to disable it.
+ */
 export const config = {
   api: {
     bodyParser: false,
