@@ -1,5 +1,7 @@
-import Cookies from "cookies";
+// import the required proxy server instance
 import { proxy } from "../../server/proxy";
+
+import Cookies from "cookies";
 
 const LOGIN_ENDPOINT_PATH = "/login";
 
