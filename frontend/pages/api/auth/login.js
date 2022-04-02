@@ -1,5 +1,4 @@
-// import the required proxy server instance
-import { proxy } from "../../server/proxy";
+import { proxy } from "../../../server/proxy";
 
 import Cookies from "cookies";
 
@@ -26,11 +25,10 @@ export default (req, res) => {
       proxyRes.once("error", reject);
 
       proxyRes.on("end", () => {
-        try {
-          body = JSON.parse(Buffer.concat(body).toString());
+        const isSuccess = proxyRes.statusCode === 200;
 
-          const isSuccess = proxyRes.statusCode === 200;
-          if (!isSuccess) throw new Error();
+        if (isSuccess) {
+          body = JSON.parse(Buffer.concat(body).toString());
 
           const cookies = new Cookies(req, res);
           cookies.set("authorization", body.accessToken, {
@@ -39,7 +37,7 @@ export default (req, res) => {
           });
 
           res.status(200).end();
-        } catch (error) {
+        } else {
           res.status(proxyRes.statusCode).json(body);
         }
 
@@ -51,6 +49,9 @@ export default (req, res) => {
     });
 
     proxy.web(req, res, {
+      /**
+       * it should be enable to handle proxy response via proxyRes event.
+       */
       selfHandleResponse: true,
     });
   });

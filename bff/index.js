@@ -5,6 +5,10 @@ require("dotenv").config({
 const express = require("express");
 const bodyParser = require("body-parser");
 const cors = require("cors");
+const loginHandler = require("./handlers/login");
+const protectedHandler = require("./handlers/protected");
+const guard = require("./middlewares/guard");
+
 const app = express();
 
 app.use(
@@ -13,11 +17,6 @@ app.use(
   })
 );
 app.use(bodyParser.json());
-
-const loginHandler = require("./handlers/login");
-const protectedHandler = require("./handlers/protected");
-
-const guard = require("./middlewares/guard");
 
 app.post("/api/login", loginHandler);
 
