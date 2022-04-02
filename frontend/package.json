@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "axios": "^0.26.1",
     "cookies": "^0.8.0",
     "http-proxy": "^1.18.1",
     "next": "12.1.1",
